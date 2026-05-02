@@ -25,6 +25,14 @@ def _resolve_flatseek_src(flatseek_src: str | None) -> str:
         return os.path.abspath(env)
     if flatseek_src and os.path.isdir(flatseek_src):
         return os.path.abspath(flatseek_src)
+
+    # Try importing from installed package first (pip install -e /path/to/flatseek)
+    try:
+        import flatseek
+        return ""
+    except ImportError:
+        pass
+
     candidates = [
         Path(__file__).parent.parent.parent.parent / "flatseek" / "src",
         Path(__file__).parent.parent.parent.parent / "flatseek",
@@ -75,7 +83,8 @@ def _fmt_duration(secs: float) -> str:
 def profile(args: argparse.Namespace) -> int:
     """Profile a single Flatseek build."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_build  # noqa: E402
@@ -156,7 +165,8 @@ def profile(args: argparse.Namespace) -> int:
 def compare(args: argparse.Namespace) -> int:
     """A/B benchmark a Flatseek build."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_build  # noqa: E402
@@ -229,7 +239,8 @@ def compare(args: argparse.Namespace) -> int:
 def search(args: argparse.Namespace) -> int:
     """Profile a single search query."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -276,7 +287,8 @@ def search(args: argparse.Namespace) -> int:
 def bench_search(args: argparse.Namespace) -> int:
     """Benchmark search queries, repeated N times."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -328,7 +340,8 @@ def bench_search(args: argparse.Namespace) -> int:
 def join(args: argparse.Namespace) -> int:
     """Profile a single join query."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -381,7 +394,8 @@ def join(args: argparse.Namespace) -> int:
 def bench_join(args: argparse.Namespace) -> int:
     """Benchmark join queries, repeated N times."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -436,7 +450,8 @@ def bench_join(args: argparse.Namespace) -> int:
 def aggregate(args: argparse.Namespace) -> int:
     """Profile a single aggregation query."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -499,7 +514,8 @@ def aggregate(args: argparse.Namespace) -> int:
 def bench_aggregate(args: argparse.Namespace) -> int:
     """Benchmark aggregation queries, repeated N times."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.core.query_engine import QueryEngine  # noqa: E402
@@ -561,7 +577,8 @@ def bench_aggregate(args: argparse.Namespace) -> int:
 def encrypt(args: argparse.Namespace) -> int:
     """Profile index encryption."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_encrypt  # noqa: E402
@@ -604,7 +621,8 @@ def encrypt(args: argparse.Namespace) -> int:
 def decrypt(args: argparse.Namespace) -> int:
     """Profile index decryption."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_decrypt  # noqa: E402
@@ -649,7 +667,8 @@ def decrypt(args: argparse.Namespace) -> int:
 def compress(args: argparse.Namespace) -> int:
     """Profile index compression."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_compress  # noqa: E402
@@ -712,7 +731,8 @@ def compress(args: argparse.Namespace) -> int:
 def delete_bench(args: argparse.Namespace) -> int:
     """Benchmark index deletion."""
     src = _resolve_flatseek_src(args.flatseek_src)
-    sys.path.insert(0, src)
+    if src:
+        sys.path.insert(0, src)
 
     try:
         from flatseek.cli import cmd_delete  # noqa: E402
