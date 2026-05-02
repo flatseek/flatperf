@@ -30,7 +30,7 @@ jobs:
           pip install -e /tmp/flatbench
 
       - name: Install flatperf
-        run: pip install -e .
+        run: pip install -e . pytest
 
       - name: Smoke-test CLI
         run: |
