@@ -1,13 +1,15 @@
-# flatperf
 
 <div align="center">
+<img src="logo.svg" alt="Flatseek" width="64" height="64">
+ 
+# Flatperf
 
-![FlatSeek Logo](https://raw.githubusercontent.com/flatseek/flatperf/main/logo.svg =64x64)
+**Performance diagnostics toolkit for Flatseek — identify bottlenecks in indexing and query pipelines.**
+
 [![PyPI version](https://img.shields.io/pypi/v/flatperf.svg)](https://pypi.org/project/flatperf/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Test](https://github.com/flatseek/flatperf/actions/workflows/test.yml/badge.svg)](https://github.com/flatseek/flatperf/actions/workflows/test.yml)
 
-**Profiling toolkit for the Flatseek build pipeline.**
 
 </div>
 
