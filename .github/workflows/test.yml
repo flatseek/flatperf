@@ -24,19 +24,13 @@ jobs:
       - name: Install flatseek and flatbench
         run: |
           python -m pip install --upgrade pip
-          cd ..
-          git clone https://github.com/flatseek/flatseek.git
-          cd flatseek
-          pip install -e .
-          cd ..
-          git clone https://github.com/flatseek/flatbench.git
-          cd flatbench
-          pip install -e .
+          git clone https://github.com/flatseek/flatseek.git /tmp/flatseek
+          pip install -e /tmp/flatseek
+          git clone https://github.com/flatseek/flatbench.git /tmp/flatbench
+          pip install -e /tmp/flatbench
 
       - name: Install flatperf
-        run: |
-          cd flatperf
-          pip install -e .
+        run: pip install -e .
 
       - name: Smoke-test CLI
         run: |
