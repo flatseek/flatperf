@@ -1,0 +1,2 @@
+[console_scripts]
+flatprofiler = flatprofiler.__main__:main

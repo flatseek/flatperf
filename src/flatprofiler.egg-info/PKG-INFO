@@ -1,0 +1,466 @@
+Metadata-Version: 2.4
+Name: flatprofiler
+Version: 0.1.0
+Summary: Profiling toolkit for Flatseek build pipeline
+Author-email: Judotens Budiarto <judotens@flatseek.io>
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/flatseek/flatprofiler
+Project-URL: Repository, https://github.com/flatseek/flatprofiler
+Project-URL: Documentation, https://github.com/flatseek/flatprofiler#readme
+Keywords: flatseek,profiling,performance
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: Apache License 2.0
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+
+# flatprofiler
+
+[![PyPI version](https://img.shields.io/pypi/v/flatprofiler.svg)](https://pypi.org/project/flatprofiler/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python versions](https://img.shields.io/pypi/pyversions/flatprofiler.svg)](https://pypi.org/project/flatprofiler/)
+
+Profiling toolkit for the Flatseek build pipeline. Available as a PyPI package or GitHub Action.
+
+## Installation
+
+### PyPI (recommended)
+
+```bash
+pip install flatprofiler
+```
+
+Requires Python 3.10+. Flatseek must be installed separately:
+
+```bash
+pip install flatseek
+```
+
+### Development
+
+```bash
+git clone https://github.com/flatseek/flatprofiler.git
+cd flatprofiler
+pip install -e .
+```
+
+## CLI Commands
+
+### `flatprofiler generate`
+
+Generate test CSV data for profiling without needing an external data source.
+
+```bash
+# Generate 1000 article rows
+flatprofiler generate --schema article --rows 1000 --output /tmp/test.csv
+
+# Generate 100k transactions
+flatprofiler generate --schema transactions --rows 100000 --output /tmp/transactions.csv
+```
+
+**Available schemas:**
+
+| Schema | Fields |
+|--------|--------|
+| `article` | id, title, content, author, category, published_at, views, status |
+| `users` | id, name, email, country, created_at, age, is_active |
+| `transactions` | id, user_id, amount, currency, merchant, location, created_at, status |
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--schema` | `article` | Data schema to generate |
+| `--rows` | `1000` | Number of rows to generate |
+| `--output` | (required) | Output CSV file path |
+
+---
+
+### `flatprofiler profile`
+
+Profile a single Flatseek build and identify hotspots.
+
+```bash
+# Quick run on a small CSV
+flatprofiler profile ./data/users.csv
+
+# Generate + profile in one flow
+flatprofiler generate --schema article --rows 100000 --output /tmp/data.csv
+flatprofiler profile /tmp/data.csv --rows 100000
+
+# Show top 30 hotspots, save .prof for snakeviz
+flatprofiler profile /tmp/data.csv --top 30 --out /tmp/build.prof
+snakeviz /tmp/build.prof
+```
+
+**Sample Output:**
+
+```
+input:    /tmp/article_100k.csv
+rows:     100,000
+workers:  1
+output:   /var/folders/c_/.../flatprofile_idx_abc123
+
+══════════════════════════════════════════════════════════════════════════════
+ wall summary
+══════════════════════════════════════════════════════════════════════════════
+ wall:        93.14s
+ docs:        100,000
+ throughput:  1,074 docs/s
+
+══════════════════════════════════════════════════════════════════════════════
+ top 25 hotspots — sorted by tottime
+══════════════════════════════════════════════════════════════════════════════
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   387094   28.534    0.000   28.534    0.000 {method 'acquire' of '_thread.lock' objects}
+    900000   25.236    0.000   43.227    0.000 builder.py:875(_index_value)
+    65802    4.826    0.000    4.826    0.000 {built-in method posix.scandir}
+  ...
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `csv` | (required) | CSV / JSON file or directory to index |
+| `-w, --workers N` | `1` | Number of parallel build workers |
+| `-r, --rows N` | (unbounded) | Profile only the first N rows |
+| `-n, --top N` | `25` | Hotspots to show in each ranking |
+| `--out PATH` | (none) | Write a binary `.prof` file (snakeviz / pyflame) |
+| `--keep-output` | off | Keep the temporary index dir after profiling |
+| `--flatseek-src DIR` | auto | Path to flatseek source (if not installed) |
+
+---
+
+### `flatprofiler compare`
+
+A/B benchmark a Flatseek build, repeated N times.
+
+```bash
+# Baseline
+flatprofiler compare ./data/big.csv --rows 100000 --runs 3 --tag "baseline"
+
+# ... edit code ...
+
+flatprofiler compare ./data/big.csv --rows 100000 --runs 3 --tag "after-cache"
+```
+
+**Sample Output:**
+
+```
+input:   /tmp/article_100k.csv
+rows:    100,000
+workers: 1
+runs:    3
+
+  run 1/3:    93.14s  (1,074 docs/s)
+  run 2/3:    91.82s  (1,089 docs/s)
+  run 3/3:    94.01s  (1,064 docs/s)
+
+────────────────────────────────────────────────────────────────────────────
+tag                      runs   min        median     max        docs/s (med)
+────────────────────────────────────────────────────────────────────────────
+baseline                 3      91.82s     93.14s     94.01s          1074
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `csv` | (required) | CSV / JSON file or directory |
+| `-n, --runs N` | `3` | Number of repeated builds |
+| `-w, --workers N` | `1` | Parallel workers per run |
+| `-r, --rows N` | (unbounded) | Trim input to first N rows |
+| `--tag NAME` | `build` | Label for the result row |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler search`
+
+Profile a single search query.
+
+```bash
+# Profile a search on an existing index
+flatprofiler search ./data "program:raydium AND signer:*7xMg*"
+
+# Save profile for flame graph
+flatprofiler search ./data "ERROR" --top 30 --out /tmp/search.prof
+snakeviz /tmp/search.prof
+```
+
+**Sample Output:**
+
+```
+══════════════════════════════════════════════════════════════════════════════
+ search result
+══════════════════════════════════════════════════════════════════════════════
+ query:      program:raydium
+ total:      12,456 matches
+ returned:   20 docs
+ wall:       0.0034s
+ qps:        294.1 queries/s
+
+══════════════════════════════════════════════════════════════════════════════
+ top 25 hotspots — sorted by tottime
+══════════════════════════════════════════════════════════════════════════════
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      542    0.001    0.000    0.001    0.000 {method 'acquire' of '_thread.lock' objects}
+       42    0.000    0.000    0.003    0.000 query_engine.py:234(_search_trigrams)
+      128    0.000    0.000    0.001    0.000 query_engine.py:187(_load_posting_list)
+  ...
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory |
+| `query` | (required) | Search query string |
+| `-n, --top N` | `25` | Hotspots to show in each ranking |
+| `-p, --page-size N` | `20` | Number of results per page |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler bench-search`
+
+Benchmark search queries, repeated N times to get latency percentiles.
+
+```bash
+# Benchmark a query
+flatprofiler bench-search ./data "program:raydium" --runs 100
+
+# Tag for comparison
+flatprofiler bench-search ./data "status:ERROR" --runs 50 --tag "error-queries"
+```
+
+**Sample Output:**
+
+```
+query:    program:raydium
+data:     ./data
+runs:     100
+
+  run 1/100: 3.45ms  (12,456 matches)
+  run 2/100: 3.21ms  (12,456 matches)
+  ...
+
+────────────────────────────────────────────────────────────────────────────
+query                         runs   min(ms)    median     p95       p99       qps
+────────────────────────────────────────────────────────────────────────────
+program:raydium               100    2.98       3.34       4.12      5.87      299.4
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory |
+| `query` | (required) | Search query string |
+| `-n, --runs N` | `10` | Number of repeated queries |
+| `-p, --page-size N` | `20` | Number of results per page |
+| `--tag NAME` | query | Label for the result row |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler encrypt`
+
+Profile index encryption.
+
+```bash
+# Profile encryption with cProfile
+flatprofiler encrypt ./data --passphrase "mysecretpass" --top 30
+
+# Multi-worker encryption
+flatprofiler encrypt ./data --passphrase "mysecretpass" --workers 8
+```
+
+**Sample Output:**
+
+```
+══════════════════════════════════════════════════════════════════════════════
+ encrypt summary
+══════════════════════════════════════════════════════════════════════════════
+ wall:       45.23s
+
+══════════════════════════════════════════════════════════════════════════════
+ top 25 hotspots — sorted by tottime
+══════════════════════════════════════════════════════════════════════════════
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  524288    32.45    0.000   32.45    0.000 query_engine.py:156(encrypt_bytes)
+   65600     8.12    0.000   12.34    0.000 builder.py:452(_encrypt_file)
+  ...
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory |
+| `--passphrase` | (required) | Encryption passphrase |
+| `-w, --workers N` | auto | Parallel workers |
+| `-n, --top N` | `25` | Hotspots to show |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler decrypt`
+
+Profile index decryption.
+
+```bash
+flatprofiler decrypt ./data --passphrase "mysecretpass"
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory |
+| `--passphrase` | (required) | Decryption passphrase |
+| `-n, --top N` | `25` | Hotspots to show |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler compress`
+
+Profile index compression.
+
+```bash
+# Profile compression
+flatprofiler compress ./data
+
+# High compression level
+flatprofiler compress ./data --level 9
+
+# Multi-worker
+flatprofiler compress ./data --workers 8
+```
+
+**Sample Output:**
+
+```
+══════════════════════════════════════════════════════════════════════════════
+ compress summary
+══════════════════════════════════════════════════════════════════════════════
+ wall:        28.45s
+ before:     256.3 MB
+ after:      89.7 MB
+ saved:      166.6 MB  (2.86x)
+
+══════════════════════════════════════════════════════════════════════════════
+ top 25 hotspots — sorted by tottime
+══════════════════════════════════════════════════════════════════════════════
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  65536     18.23    0.000   18.23    0.000 {built-in method zlib.compress}
+      1      5.12    0.000   23.45    0.000 builder.py:892(cmd_compress)
+  ...
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory |
+| `-l, --level N` | `6` | Compression level 1-9 |
+| `-w, --workers N` | auto | Parallel workers |
+| `-n, --top N` | `25` | Hotspots to show |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+### `flatprofiler delete`
+
+Benchmark index deletion.
+
+```bash
+# Benchmark deletion speed
+flatprofiler delete ./data --runs 3
+
+# Multi-worker deletion
+flatprofiler delete ./data --workers 16
+```
+
+**Sample Output:**
+
+```
+data:     /tmp/flatprofiler_deleterun_0_abc123
+runs:     3
+
+  run 1/3:    12.34s
+  run 2/3:    11.89s
+  run 3/3:    13.21s
+
+────────────────────────────────────────────────────────────────────────────
+operation              runs   min        median     max
+────────────────────────────────────────────────────────────────────────────
+delete                 3      11.89s     12.34s     13.21s
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `data_dir` | (required) | Index directory to delete |
+| `-n, --runs N` | `3` | Number of repeated runs |
+| `-w, --workers N` | auto | Parallel workers |
+| `--flatseek-src DIR` | auto | Path to flatseek source |
+
+---
+
+## Reading the Output
+
+`cProfile` output shows two rankings:
+
+- **`tottime`** = seconds spent inside the function itself (excluding callees). Optimize the top of this list to win wall time.
+
+- **`cumtime`** = seconds spent inside the function plus everything it called. Use it to find which code subtree dominates a long-running call.
+
+A function with high `cumtime` but low `tottime` is just a wrapper — its expensive callee is the actual cost. Look further down.
+
+## Recipe — Find the Next Bottleneck
+
+```bash
+# 1. Generate test data and establish a baseline
+flatprofiler generate --schema article --rows 100000 --output /tmp/data.csv
+flatprofiler compare /tmp/data.csv --rows 100000 --runs 3 --tag "baseline"
+
+# 2. Profile to see where time goes
+flatprofiler profile /tmp/data.csv --rows 100000 --top 30 \
+    --out /tmp/build.prof
+snakeviz /tmp/build.prof   # interactive flame graph
+
+# 3. Pick the highest-tottime function and inspect it. Edit. Test.
+
+# 4. Confirm the gain
+flatprofiler compare /tmp/data.csv --rows 100000 --runs 3 --tag "after-X"
+
+# 5. For search: profile individual queries
+flatprofiler search /tmp/data "common_query" --top 30
+
+# 6. Benchmark search latency
+flatprofiler bench-search /tmp/data "common_query" --runs 100
+```
+
+Repeat until the top-of-list is "intrinsic work" (per-cell tokenize, per-term encode) — not setup, parsing, or IO that can be cached.
+
+## Development
+
+```bash
+# Install in development mode
+pip install -e .
+
+# Run tests
+pip install pytest
+pytest
+```
+
+## License
+
+Apache 2.0

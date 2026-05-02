@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/flatprofiler/__init__.py
+src/flatprofiler/__main__.py
+src/flatprofiler/commands.py
+src/flatprofiler/generate.py
+src/flatprofiler.egg-info/PKG-INFO
+src/flatprofiler.egg-info/SOURCES.txt
+src/flatprofiler.egg-info/dependency_links.txt
+src/flatprofiler.egg-info/entry_points.txt
+src/flatprofiler.egg-info/top_level.txt
+tests/test_build_commands.py
+tests/test_cli.py
+tests/test_crypto_compress_commands.py
+tests/test_generate.py
+tests/test_search_commands.py
