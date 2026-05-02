@@ -21,11 +21,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install package
+      - name: Install flatseek and flatbench
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install pytest
+          cd ..
+          git clone https://github.com/flatseek/flatseek.git
+          cd flatseek
+          pip install -e .
+          cd ..
+          git clone https://github.com/flatseek/flatbench.git
+          cd flatbench
+          pip install -e .
+
+      - name: Install flatperf
+        run: |
+          cd flatperf
+          pip install -e .
 
       - name: Smoke-test CLI
         run: |
@@ -47,15 +58,7 @@ jobs:
       - name: Run unit tests
         run: pytest tests/ -v
 
-      - name: Install flatseek for integration test
-        if: matrix.python-version == '3.12'
-        run: |
-          cd ..
-          git clone https://github.com/flatseek/flatseek.git
-          cd flatseek
-          pip install -e .
-
-      - name: Run integration tests
+      - name: Integration test
         if: matrix.python-version == '3.12'
         run: |
           flatperf generate --schema article --rows 1000 --output /tmp/test_data.csv

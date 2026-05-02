@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![FlatSeek Logo](https://flatseek.io/logo.png)
+![FlatSeek Logo](https://raw.githubusercontent.com/flatseek/flatbench/main/public/logo.svg)
 [![PyPI version](https://img.shields.io/pypi/v/flatperf.svg)](https://pypi.org/project/flatperf/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Test](https://github.com/flatseek/flatperf/actions/workflows/test.yml/badge.svg)](https://github.com/flatseek/flatperf/actions/workflows/test.yml)
