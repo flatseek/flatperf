@@ -1,2 +1,0 @@
-[console_scripts]
-flatperf = flatperf.__main__:main
